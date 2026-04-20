@@ -18,10 +18,11 @@ jobs:
         uses: actions/checkout@v4
 
       # Step 2: Install Node.js
+      # Using Node 16 for compatibility with react-scripts 4.0.3 (older webpack)
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '16'
           cache: 'npm'
 
       # Step 3: Install project dependencies
@@ -38,6 +39,7 @@ jobs:
           REACT_APP_NEWS_API_URL: ${{ secrets.REACT_APP_NEWS_API_URL }}
           REACT_APP_NEWS_RAPIDAPI_HOST: ${{ secrets.REACT_APP_NEWS_RAPIDAPI_HOST }}
           CI: false # Prevents warnings from being treated as errors
+          NODE_OPTIONS: --openssl-legacy-provider # Fix for OpenSSL 3 compatibility
         run: npm run build
 
       # Step 5: Configure AWS credentials
