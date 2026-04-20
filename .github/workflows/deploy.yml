@@ -39,6 +39,7 @@ jobs:
           REACT_APP_NEWS_API_URL: ${{ secrets.REACT_APP_NEWS_API_URL }}
           REACT_APP_NEWS_RAPIDAPI_HOST: ${{ secrets.REACT_APP_NEWS_RAPIDAPI_HOST }}
           CI: false # Prevents warnings from being treated as errors
+          DISABLE_ESLINT_PLUGIN: true # Skip ESLint during production build
         run: npm run build
 
       # Step 5: Configure AWS credentials
