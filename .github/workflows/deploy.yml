@@ -39,7 +39,6 @@ jobs:
           REACT_APP_NEWS_API_URL: ${{ secrets.REACT_APP_NEWS_API_URL }}
           REACT_APP_NEWS_RAPIDAPI_HOST: ${{ secrets.REACT_APP_NEWS_RAPIDAPI_HOST }}
           CI: false # Prevents warnings from being treated as errors
-          NODE_OPTIONS: --openssl-legacy-provider # Fix for OpenSSL 3 compatibility
         run: npm run build
 
       # Step 5: Configure AWS credentials
