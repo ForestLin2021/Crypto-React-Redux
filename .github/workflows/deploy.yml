@@ -1,0 +1,79 @@
+name: Deploy to AWS S3 + CloudFront
+
+# This workflow runs every time you push to the `main` branch.
+# It builds your React app and deploys it to AWS automatically.
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch: # Allows you to manually trigger from GitHub UI
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Get your code from GitHub
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Step 2: Install Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      # Step 3: Install project dependencies
+      - name: Install dependencies
+        run: npm ci
+
+      # Step 4: Build the React app
+      # Environment variables come from GitHub Secrets (set in repo settings)
+      - name: Build
+        env:
+          REACT_APP_RAPIDAPI_KEY: ${{ secrets.REACT_APP_RAPIDAPI_KEY }}
+          REACT_APP_CRYPTO_API_URL: ${{ secrets.REACT_APP_CRYPTO_API_URL }}
+          REACT_APP_CRYPTO_RAPIDAPI_HOST: ${{ secrets.REACT_APP_CRYPTO_RAPIDAPI_HOST }}
+          REACT_APP_NEWS_API_URL: ${{ secrets.REACT_APP_NEWS_API_URL }}
+          REACT_APP_NEWS_RAPIDAPI_HOST: ${{ secrets.REACT_APP_NEWS_RAPIDAPI_HOST }}
+          CI: false # Prevents warnings from being treated as errors
+        run: npm run build
+
+      # Step 5: Configure AWS credentials
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      # Step 6: Sync build files to S3
+      # --delete removes old files from S3 that no longer exist in build/
+      - name: Deploy to S3
+        run: |
+          aws s3 sync build/ s3://${{ secrets.AWS_S3_BUCKET }} \
+            --delete \
+            --cache-control "public, max-age=31536000, immutable" \
+            --exclude "index.html" \
+            --exclude "service-worker.js"
+
+      # Step 7: Upload index.html separately with no-cache
+      # This ensures users always get the newest version
+      - name: Upload index.html with no-cache
+        run: |
+          aws s3 cp build/index.html s3://${{ secrets.AWS_S3_BUCKET }}/index.html \
+            --cache-control "public, max-age=0, must-revalidate"
+
+      # Step 8: Invalidate CloudFront cache so users see updates immediately
+      - name: Invalidate CloudFront cache
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ secrets.AWS_CLOUDFRONT_DISTRIBUTION_ID }} \
+            --paths "/*"
+
+      # Step 9: Print success message with the live URL
+      - name: Deployment summary
+        run: |
+          echo "✅ Deployment complete!"
+          echo "🌐 Your site: https://${{ secrets.AWS_CLOUDFRONT_DOMAIN }}"

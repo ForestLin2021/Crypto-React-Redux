@@ -120,9 +120,19 @@ Crypto-React-Redux/
 
 ## 🌐 Deployment
 
-This project is ready to deploy on **Netlify** or **Vercel**.
+This project is configured to deploy automatically to **AWS S3 + CloudFront** via **GitHub Actions** — every push to `main` triggers a new deployment.
 
-A `public/_redirects` file is already included for proper SPA routing on Netlify. Just remember to add your environment variables in the deployment platform's settings.
+📖 **See [`DEPLOY_TO_AWS.md`](./DEPLOY_TO_AWS.md)** for a complete step-by-step guide (beginner-friendly).
+
+💰 **See [`AWS_COST_SAFETY.md`](./AWS_COST_SAFETY.md)** to keep your AWS bill at $0.
+
+The included GitHub Actions workflow (`.github/workflows/deploy.yml`) handles:
+- Installing dependencies
+- Building the React app
+- Syncing files to S3
+- Invalidating CloudFront cache
+
+Want to use Netlify or Vercel instead? A `public/_redirects` file is already included for SPA routing on those platforms.
 
 ---
 
